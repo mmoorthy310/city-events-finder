@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Find the best city events happening near you.">
+    <title>City Events Finder</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --primary: #8b5cf6;
+            --primary-hover: #7c3aed;
+            --text-main: #f8fafc;
+            --text-muted: #cbd5e1;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --card-border: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--bg-color) 0%, #1e1b4b 100%);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Subtle background glow effect */
+        body::before {
+            content: '';
+            position: absolute;
+            top: -20%;
+            left: -10%;
+            width: 50vw;
+            height: 50vw;
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.15) 0%, transparent 70%);
+            z-index: -1;
+        }
+
+        body::after {
+            content: '';
+            position: absolute;
+            bottom: -20%;
+            right: -10%;
+            width: 60vw;
+            height: 60vw;
+            background: radial-gradient(circle, rgba(56, 189, 248, 0.1) 0%, transparent 70%);
+            z-index: -1;
+        }
+
+        header {
+            margin-top: 80px;
+            text-align: center;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 25px;
+            background: linear-gradient(to right, #e2e8f0, #8b5cf6, #38bdf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -1px;
+        }
+
+        button {
+            padding: 14px 32px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            font-family: 'Outfit', sans-serif;
+            cursor: pointer;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 9999px;
+            box-shadow: 0 4px 14px rgba(139, 92, 246, 0.4);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        button:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(139, 92, 246, 0.6);
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        #events-container {
+            margin-top: 50px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 24px;
+            width: 100%;
+            max-width: 1100px;
+            padding: 0 20px 60px;
+            box-sizing: border-box;
+        }
+
+        .event-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--card-border);
+            padding: 24px;
+            border-radius: 16px;
+            transition: all 0.3s ease;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+
+        .event-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            background: rgba(40, 53, 75, 0.8);
+        }
+
+        .event-name {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #ffffff;
+        }
+
+        .event-details p {
+            color: var(--text-muted);
+            font-size: 1rem;
+            margin: 8px 0;
+            display: flex;
+            align-items: center;
+        }
+
+        .event-details span {
+            font-weight: 600;
+            color: #94a3b8;
+            width: 60px;
+            display: inline-block;
+        }
+
+        /* Loading indicator */
+        .loader {
+            display: none;
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 40px auto;
+        }
+
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>City Events Finder</h1>
+        <button id="search-btn" onclick="fetchEvents()">Discover Events</button>
+    </header>
+
+    <div class="loader" id="loader"></div>
+    <div id="events-container"></div>
+
+    <script>
+        async function fetchEvents() {
+            const container = document.getElementById('events-container');
+            const loader = document.getElementById('loader');
+            const btn = document.getElementById('search-btn');
+            
+            container.innerHTML = ''; 
+            loader.style.display = 'block';
+            btn.disabled = true;
+            btn.style.opacity = '0.7';
+            btn.textContent = 'Searching...';
+
+            try {
+                // Add a tiny artificial delay so you can see the cool loading spinner and card animations
+                await new Promise(r => setTimeout(r, 400)); 
+                
+                const response = await fetch('/search');
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                
+                const events = await response.json();
+                displayEvents(events);
+            } catch (error) {
+                console.error("Could not fetch events:", error);
+                container.innerHTML = `<p style="color:#ef4444; font-weight: 500; text-align: center;">Error fetching events. Is the backend running?</p>`;
+            } finally {
+                loader.style.display = 'none';
+                btn.disabled = false;
+                btn.style.opacity = '1';
+                btn.textContent = 'Discover Events';
+            }
+        }
+
+        function displayEvents(events) {
+            const container = document.getElementById('events-container');
+
+            if (events.length === 0) {
+                container.innerHTML = '<p style="color:var(--text-muted); text-align: center;">No events found right now.</p>';
+                return;
+            }
+
+            events.forEach((event, index) => {
+                const card = document.createElement('div');
+                card.className = 'event-card';
+                card.style.animationDelay = `${index * 0.1}s`;
+                
+                card.innerHTML = `
+                    <div class="event-name">${event.Name}</div>
+                    <div class="event-details">
+                        <p><span>Date</span> ${event.Date}</p>
+                        <p><span>Venue</span> ${event.Venue}</p>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+    </script>
+</body>
+</html>
