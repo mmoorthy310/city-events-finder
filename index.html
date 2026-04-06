@@ -70,6 +70,41 @@
             letter-spacing: -1px;
         }
 
+        .search-container {
+            display: flex;
+            gap: 12px;
+            width: 100%;
+            max-width: 500px;
+            padding: 0 20px;
+            box-sizing: border-box;
+            margin: 0 auto;
+        }
+
+        input[type="text"] {
+            flex-grow: 1;
+            padding: 14px 24px;
+            font-size: 1.1rem;
+            font-family: 'Outfit', sans-serif;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            border-radius: 9999px;
+            outline: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.3);
+            background: rgba(30, 41, 59, 0.9);
+        }
+
+        input[type="text"]::placeholder {
+            color: var(--text-muted);
+        }
+
         button {
             padding: 14px 32px;
             font-size: 1.1rem;
@@ -171,17 +206,27 @@
 
     <header>
         <h1>City Events Finder</h1>
-        <button id="search-btn" onclick="fetchEvents()">Discover Events</button>
+        <div class="search-container">
+            <input type="text" id="city-input" placeholder="Enter a city (e.g., Boston)..." onkeyup="handleKeyPress(event)">
+            <button id="search-btn" onclick="fetchEvents()">Discover</button>
+        </div>
     </header>
 
     <div class="loader" id="loader"></div>
     <div id="events-container"></div>
 
     <script>
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                fetchEvents();
+            }
+        }
+
         async function fetchEvents() {
             const container = document.getElementById('events-container');
             const loader = document.getElementById('loader');
             const btn = document.getElementById('search-btn');
+            const cityInput = document.getElementById('city-input').value.trim();
             
             container.innerHTML = ''; 
             loader.style.display = 'block';
@@ -193,7 +238,12 @@
                 // Add a tiny artificial delay so you can see the cool loading spinner and card animations
                 await new Promise(r => setTimeout(r, 400)); 
                 
-                const response = await fetch('/search');
+                let url = '/search';
+                if (cityInput) {
+                    url += `?city=${encodeURIComponent(cityInput)}`;
+                }
+                
+                const response = await fetch(url);
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 
                 const events = await response.json();
