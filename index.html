@@ -74,10 +74,13 @@
             display: flex;
             gap: 12px;
             width: 100%;
-            max-width: 500px;
+            max-width: 800px;
             padding: 0 20px;
             box-sizing: border-box;
             margin: 0 auto;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap; /* Allows wrapping on smaller screens */
         }
 
         input[type="text"] {
@@ -105,6 +108,7 @@
             color: var(--text-muted);
         }
 
+
         button {
             padding: 14px 32px;
             font-size: 1.1rem;
@@ -119,6 +123,7 @@
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
             overflow: hidden;
+            white-space: nowrap;
         }
 
         button:hover {
