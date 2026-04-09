@@ -104,10 +104,26 @@ async def search_events(city: str = ""):
             fetch_seatgeek(city, client)
         )
 
-    # Merge and sort combined results by date
+    # Merge results
     combined = tm_events + sg_events
-    combined.sort(key=lambda e: e["Date"] if e["Date"] != "TBD" else "9999")
-    return combined
+
+    # Deduplicate by normalized name + date fingerprint
+    seen = set()
+    deduped = []
+    for event in combined:
+        name_normalized = event["Name"].lower().strip()
+        key = (name_normalized, event["Date"])
+        if key not in seen:
+            seen.add(key)
+            deduped.append(event)
+
+    # Sort deduplicated results by date
+    deduped.sort(key=lambda e: e["Date"] if e["Date"] != "TBD" else "9999")
+
+    # Print deduplication stats to console
+    print(f"Merged {len(combined)} events → {len(deduped)} after deduplication (removed {len(combined) - len(deduped)} duplicates)")
+
+    return deduped
 
 @app.get("/")
 def serve_home():
