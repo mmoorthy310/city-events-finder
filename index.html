@@ -189,6 +189,29 @@
             display: inline-block;
         }
 
+        .source-badge {
+            display: inline-block;
+            margin-top: 14px;
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .source-ticketmaster {
+            background: rgba(139, 92, 246, 0.2);
+            color: #c4b5fd;
+            border: 1px solid rgba(139, 92, 246, 0.4);
+        }
+
+        .source-seatgeek {
+            background: rgba(56, 189, 248, 0.15);
+            color: #7dd3fc;
+            border: 1px solid rgba(56, 189, 248, 0.35);
+        }
+
         /* Loading indicator */
         .loader {
             display: none;
@@ -283,6 +306,7 @@
                         <p><span>Date</span> ${event.Date}</p>
                         <p><span>Venue</span> ${event.Venue}</p>
                     </div>
+                    <span class="source-badge source-${event.Source ? event.Source.toLowerCase() : 'unknown'}">${event.Source || 'Unknown'}</span>
                 `;
                 container.appendChild(card);
             });
