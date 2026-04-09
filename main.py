@@ -95,17 +95,66 @@ async def fetch_seatgeek(city: str, client: httpx.AsyncClient):
         print(f"SeatGeek error: {e}")
         return []
 
+async def fetch_predicthq(city: str, client: httpx.AsyncClient):
+    api_key = os.getenv("PREDICTHQ_API_KEY")
+    if not api_key:
+        return []
+    try:
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Accept": "application/json"
+        }
+        params = {
+            "limit": 10,
+            "sort": "start"
+        }
+        if city:
+            params["q"] = city
+
+        response = await client.get(
+            "https://api.predicthq.com/v1/events/",
+            headers=headers,
+            params=params
+        )
+        response.raise_for_status()
+        data = response.json()
+
+        events = []
+        for event in data.get("results", []):
+            name = event.get("title", "Unknown Event")
+            date = "TBD"
+            if "start_local" in event and event["start_local"]:
+                date = event["start_local"].split("T")[0]
+            elif "start" in event and event["start"]:
+                date = event["start"].split("T")[0]
+            
+            venue = "Unknown Venue"
+            for entity in event.get("entities", []):
+                if entity.get("type") == "venue":
+                    venue = entity.get("name", "Unknown Venue")
+                    break
+            
+            if venue == "Unknown Venue" and "geo" in event and event["geo"] and "address" in event["geo"] and "formatted_address" in event["geo"]["address"]:
+                venue = event["geo"]["address"]["formatted_address"]
+            
+            events.append({"Name": name, "Date": date, "Venue": venue, "Source": "PredictHQ"})
+        return events
+    except Exception as e:
+        print(f"PredictHQ error: {e}")
+        return []
+
 @app.get("/search")
 async def search_events(city: str = ""):
     async with httpx.AsyncClient() as client:
-        # Fetch from both APIs simultaneously
-        tm_events, sg_events = await asyncio.gather(
+        # Fetch from all APIs simultaneously
+        tm_events, sg_events, phq_events = await asyncio.gather(
             fetch_ticketmaster(city, client),
-            fetch_seatgeek(city, client)
+            fetch_seatgeek(city, client),
+            fetch_predicthq(city, client)
         )
 
     # Merge results
-    combined = tm_events + sg_events
+    combined = tm_events + sg_events + phq_events
 
     # Deduplicate by normalized name + date fingerprint
     seen = set()
