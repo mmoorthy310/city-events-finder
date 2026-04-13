@@ -53,8 +53,38 @@ uvicorn main:app --reload
 
 Once running, simply open your web browser and navigate to: [http://127.0.0.1:8000/](http://127.0.0.1:8000/)
 
+## ☁️ Google Cloud Deployment
+
+The application is containerized and ready for deployment to **Google Cloud Run** behind a **Global External HTTP(S) Load Balancer**.
+
+### Prerequisites
+1. A Google Cloud Project (e.g., `synthetix-gcp-project`).
+2. Billing enabled for the project.
+
+### Deployment via Cloud Shell
+1. Open the [Google Cloud Console](https://console.cloud.google.com).
+2. Launch **Cloud Shell** (the `>_` icon in the top right).
+3. Clone your repository:
+   ```bash
+   gh auth login
+   git clone https://github.com/mmoorthy310/city-events-finder.git
+   cd city-events-finder
+   ```
+4. Run the deployment script:
+   ```bash
+   chmod +x deploy.sh
+   ./deploy.sh
+   ```
+
+### Managing Secrets
+The application uses **GCP Secret Manager** in production. The `deploy.sh` script will prompt you to add your API keys. You can manually update them anytime using:
+```bash
+echo -n "your_key" | gcloud secrets versions add TICKETMASTER_API_KEY --data-file=-
+```
+
 ## 🏗️ Deep Dive / How it Works
 1. The frontend (`index.html`) takes a search parameter and hits the `/search` endpoint on the FastAPI router.
 2. The endpoint utilizes `asyncio.gather` to instantaneously request payload data from Ticketmaster, SeatGeek, and PredictHQ.
 3. Each distinct JSON output is chopped up and normalized perfectly into identical formatting (`Name`, `Date`, `Venue`, `Source`).
 4. The finalized dataset is merged, evaluated for duplicates using name + string formatting, chronologically sorted, and served dynamically.
+5. In production, `main.py` detects the `K_SERVICE` environment variable and pulls secrets from Secret Manager instead of `.env`.
