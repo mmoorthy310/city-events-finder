@@ -6,8 +6,26 @@ import os
 import asyncio
 from dotenv import load_dotenv
 from datetime import datetime, timezone
+from google.cloud import secretmanager
 
 load_dotenv()
+
+PROJECT_ID = "synthetix-gcp-project"
+
+def initialize_secrets():
+    # If running in Cloud Run, K_SERVICE environment variable is automatically set.
+    if os.getenv("K_SERVICE"):
+        print("Cloud Run detected. Fetching secrets from GCP Secret Manager...")
+        try:
+            client = secretmanager.SecretManagerServiceClient()
+            for key in ["TICKETMASTER_API_KEY", "SEATGEEK_CLIENT_ID", "PREDICTHQ_API_KEY"]:
+                name = f"projects/{PROJECT_ID}/secrets/{key}/versions/latest"
+                response = client.access_secret_version(request={"name": name})
+                os.environ[key] = response.payload.data.decode("UTF-8")
+        except Exception as e:
+            print(f"Error initializing secrets from GCP: {e}")
+
+initialize_secrets()
 
 app = FastAPI()
 
