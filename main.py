@@ -5,6 +5,7 @@ import httpx
 import os
 import asyncio
 from dotenv import load_dotenv
+from datetime import datetime, timezone
 
 load_dotenv()
 
@@ -28,10 +29,12 @@ async def fetch_ticketmaster(city: str, client: httpx.AsyncClient):
     if not api_key:
         return []
     try:
+        now = datetime.now(timezone.utc)
         params = {
             "apikey": api_key,
             "size": 10,
-            "sort": "date,asc"
+            "sort": "date,asc",
+            "startDateTime": now.strftime("%Y-%m-%dT%H:%M:%SZ")
         }
         if city:
             params["city"] = city
@@ -64,10 +67,12 @@ async def fetch_seatgeek(city: str, client: httpx.AsyncClient):
     if not client_id:
         return []
     try:
+        now = datetime.now(timezone.utc)
         params = {
             "client_id": client_id,
             "per_page": 10,
-            "sort": "datetime_utc.asc"
+            "sort": "datetime_utc.asc",
+            "datetime_utc.gte": now.strftime("%Y-%m-%d")
         }
         if city:
             params["venue.city"] = city
@@ -100,13 +105,15 @@ async def fetch_predicthq(city: str, client: httpx.AsyncClient):
     if not api_key:
         return []
     try:
+        now = datetime.now(timezone.utc)
         headers = {
             "Authorization": f"Bearer {api_key}",
             "Accept": "application/json"
         }
         params = {
             "limit": 10,
-            "sort": "start"
+            "sort": "start",
+            "start.gte": now.strftime("%Y-%m-%d")
         }
         if city:
             params["q"] = city
