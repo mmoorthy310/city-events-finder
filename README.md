@@ -1,5 +1,7 @@
 # City Events Finder
 
+🌐 **Live Demo:** http://34.102.211.215/
+
 City Events Finder is a fast, lightweight web application built with FastAPI that aggregates real-time event data from major ticketing platforms. By simply searching for a city name, it seamlessly retrieves, normalizes, and displays chronological events from around the internet.
 
 ## 🌟 Features
@@ -19,17 +21,16 @@ City Events Finder is a fast, lightweight web application built with FastAPI tha
 Ensure you have Python 3 installed on your system. It is highly recommended to use a virtual environment:
 
 ```bash
-# Create a virtual environment
+# Create a virtual environment (Mac/Linux)
 python3 -m venv venv
-
-# Activate it (Mac/Linux)
 source venv/bin/activate
 
-# (Optional) Activate it (Windows)
-# venv\Scripts\activate
+# Create a virtual environment (Windows)
+py -m venv venv
+venv\Scripts\activate
 
 # Install dependencies
-pip install fastapi uvicorn httpx python-dotenv
+pip install -r requirements.txt
 ```
 
 ### Environment Variables
